@@ -2,6 +2,7 @@ import { Buffer } from 'buffer';
 import { action, makeObservable, observable } from 'mobx';
 import { BaseBleComm } from './BaseBleComm';
 import { BLEServiceUUID, LEDColorCharacteristicUUID } from './constants';
+import { Device } from 'react-native-ble-plx';
 
 export interface LedColor {
   red: number;
@@ -14,7 +15,7 @@ export class LedComm extends BaseBleComm {
   @observable
   public currColor: LedColor;
 
-  private constructor() {
+  constructor() {
     super();
     this.currColor = { red: 0, green: 0, blue: 0, white: 0 };
     makeObservable(this);
@@ -53,6 +54,10 @@ export class LedComm extends BaseBleComm {
     };
   };
 
+  public startScan = (): void => {
+    return super.startScan([LEDColorCharacteristicUUID]);
+  };
+
   @action
   public writeColor = async (deviceMac: string, color: LedColor): Promise<LedColor> => {
     const rxBuf = await this.writeCharacteristic(
@@ -86,3 +91,5 @@ export class LedComm extends BaseBleComm {
     return rxColor;
   };
 }
+
+export const LedCommInstance = new LedComm();
