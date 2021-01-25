@@ -1,8 +1,7 @@
 import { Buffer } from 'buffer';
-import { action, makeObservable, observable } from 'mobx';
-import { BaseBleComm } from './BaseBleComm';
+import { ScanMode } from 'react-native-ble-plx';
+import { BaseBleComm, BleCommDeviceCallback } from './BaseBleComm';
 import { BLEServiceUUID, LEDColorCharacteristicUUID } from './constants';
-import { Device } from 'react-native-ble-plx';
 
 export interface LedColor {
   red: number;
@@ -12,16 +11,11 @@ export interface LedColor {
 }
 
 export class LedComm extends BaseBleComm {
-  @observable
-  public currColor: LedColor;
-
   constructor() {
     super();
-    this.currColor = { red: 0, green: 0, blue: 0, white: 0 };
-    makeObservable(this);
   }
 
-  private roundColor = (colorByte: number) => {
+  private roundColor(colorByte: number): number {
     if (colorByte < 0) {
       return 0;
     }
@@ -31,35 +25,36 @@ export class LedComm extends BaseBleComm {
     }
 
     return Math.round(colorByte);
-  };
+  }
 
-  private colorNumToBuffer = (color: LedColor): Buffer => {
+  private colorNumToBuffer(color: LedColor): Buffer {
     return Buffer.from([
       this.roundColor(color.white),
       this.roundColor(color.blue),
       this.roundColor(color.green),
       this.roundColor(color.red),
     ]);
-  };
+  }
 
-  private bufferToColorNum = (colorBuf: Buffer): LedColor | null => {
+  private bufferToColorNum(colorBuf: Buffer): LedColor | null {
     if (colorBuf.length !== 4) {
       return null;
     }
+
     return {
       red: colorBuf[3],
       green: colorBuf[2],
       blue: colorBuf[1],
       white: colorBuf[0],
     };
-  };
+  }
 
-  public startScan = (): void => {
-    return super.startScan([LEDColorCharacteristicUUID]);
-  };
+  public scanLEDDevices(cb: BleCommDeviceCallback): void {
+    console.log('Start scanning!');
+    this.startScan([BLEServiceUUID], cb, ScanMode.LowLatency);
+  }
 
-  @action
-  public writeColor = async (deviceMac: string, color: LedColor): Promise<LedColor> => {
+  public async writeColor(deviceMac: string, color: LedColor): Promise<LedColor> {
     const rxBuf = await this.writeCharacteristic(
       deviceMac,
       BLEServiceUUID,
@@ -73,10 +68,9 @@ export class LedComm extends BaseBleComm {
     }
 
     return rxColor;
-  };
+  }
 
-  @action
-  public readColor = async (deviceMac: string): Promise<LedColor> => {
+  public async readColor(deviceMac: string): Promise<LedColor> {
     const rxBuf = await this.readCharacteristic(
       deviceMac,
       BLEServiceUUID,
@@ -89,7 +83,7 @@ export class LedComm extends BaseBleComm {
     }
 
     return rxColor;
-  };
+  }
 }
 
 export const LedCommInstance = new LedComm();

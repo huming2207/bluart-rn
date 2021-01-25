@@ -1,5 +1,4 @@
 import { Buffer } from 'buffer';
-import { makeObservable, observable } from 'mobx';
 import { PermissionsAndroid } from 'react-native';
 import {
   BleManager,
@@ -10,38 +9,13 @@ import {
   State,
 } from 'react-native-ble-plx';
 
-export const BLE = new BleManager();
+export type BleCommDeviceCallback = (err: BleError | null, device: Device | null) => void;
+export type BleCommStateCallback = (state: State) => void;
 
 export class BaseBleComm {
-  @observable
-  public connectedDevices: Device[] = [];
-
-  @observable
-  public scannedDevices: Device[] = [];
-
-  @observable
-  public bleState: State = State.Unknown;
-
   protected ble = new BleManager();
-  private static instance: BaseBleComm;
 
-  constructor() {
-    makeObservable(this);
-
-    this.ble.onStateChange((state: State) => {
-      this.bleState = state;
-    });
-  }
-
-  public static getInstance(): BaseBleComm {
-    if (!BaseBleComm.instance) {
-      BaseBleComm.instance = new BaseBleComm();
-    }
-
-    return BaseBleComm.instance;
-  }
-
-  public requestPermission = async (): Promise<void> => {
+  public async requestPermission(): Promise<void> {
     try {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -61,37 +35,46 @@ export class BaseBleComm {
     } catch (err) {
       console.warn(err);
     }
-  };
+  }
 
-  public startScan = (serviceUuids: string[], scanMode = ScanMode.Balanced): void => {
-    this.ble.startDeviceScan([...serviceUuids], { scanMode }, this.handleScanResult);
-  };
+  public async checkPermission(): Promise<boolean> {
+    return PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+  }
 
-  public stopScan = (): void => {
+  public startScan(
+    serviceUuids: string[],
+    cb: BleCommDeviceCallback,
+    scanMode = ScanMode.LowLatency,
+  ): void {
+    this.ble.startDeviceScan(serviceUuids, { scanMode }, cb);
+  }
+
+  public stopScan(): void {
     this.ble.stopDeviceScan();
-  };
+  }
 
-  public connect = async (deviceMac: string, option?: ConnectionOptions): Promise<Device> => {
+  public async connect(
+    deviceMac: string,
+    cb: BleCommDeviceCallback,
+    option?: ConnectionOptions,
+  ): Promise<Device> {
     await this.ble.connectToDevice(deviceMac, option);
     const device = await this.ble.discoverAllServicesAndCharacteristicsForDevice(deviceMac);
-    this.ble.onDeviceDisconnected(device.id, this.handleDeviceDisconnect);
+    this.ble.onDeviceDisconnected(device.id, cb);
 
-    this.scannedDevices.push(device);
     return device;
-  };
+  }
 
-  public disconnect = async (deviceMac: string): Promise<Device> => {
-    const device = await this.ble.cancelDeviceConnection(deviceMac);
-    this.scannedDevices = this.scannedDevices.filter((item) => item.id !== device.id);
-    return device;
-  };
+  public async disconnect(deviceMac: string): Promise<Device> {
+    return await this.ble.cancelDeviceConnection(deviceMac);
+  }
 
-  public readCharacteristic = async (
+  public async readCharacteristic(
     deviceMac: string,
     serviceUuid: string,
     characteristicUuid: string,
-  ): Promise<Buffer> => {
-    const character = await BLE.readCharacteristicForDevice(
+  ): Promise<Buffer> {
+    const character = await this.ble.readCharacteristicForDevice(
       deviceMac,
       serviceUuid,
       characteristicUuid,
@@ -102,15 +85,15 @@ export class BaseBleComm {
     }
 
     return Buffer.from(character.value, 'base64');
-  };
+  }
 
-  public writeCharacteristic = async (
+  public async writeCharacteristic(
     deviceMac: string,
     serviceUuid: string,
     characteristicUuid: string,
     data: Buffer,
-  ): Promise<Buffer> => {
-    const character = await BLE.writeCharacteristicWithResponseForDevice(
+  ): Promise<Buffer> {
+    const character = await this.ble.writeCharacteristicWithResponseForDevice(
       deviceMac,
       serviceUuid,
       characteristicUuid,
@@ -122,31 +105,5 @@ export class BaseBleComm {
     }
 
     return Buffer.from(character.value, 'base64');
-  };
-
-  private handleScanResult = (err: BleError | null, device: Device | null) => {
-    if (err) {
-      console.error('Failed to scan!', err);
-      throw err;
-    }
-
-    if (!device || this.scannedDevices.some((element) => element.id === device.id)) {
-      return;
-    }
-
-    this.scannedDevices.push(device);
-  };
-
-  private handleDeviceDisconnect = (err: BleError | null, device: Device | null) => {
-    if (err) {
-      console.error('Disconnected with error', err);
-      throw err;
-    }
-
-    if (!device) {
-      return;
-    }
-
-    this.scannedDevices = this.scannedDevices.filter((item) => item.id !== device.id);
-  };
+  }
 }
