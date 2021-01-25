@@ -1,12 +1,22 @@
-import React, { useState } from 'react';
-import { Modal, Portal, Button, Provider, List } from 'react-native-paper';
-import { ListRenderItemInfo, StyleProp, ViewStyle } from 'react-native';
-import { Device } from 'react-native-ble-plx';
-import { FlatList } from 'react-native-gesture-handler';
-import { LedComm } from '../../helper/BLE/LedComm';
+import React, { useCallback, useState } from 'react';
+import { List } from 'react-native-paper';
+import {
+  ListRenderItemInfo,
+  RefreshControl,
+  StyleProp,
+  StyleSheet,
+  Text,
+  ViewStyle,
+  FlatList,
+} from 'react-native';
+import { BleError, Device } from 'react-native-ble-plx';
+import { Observer } from 'mobx-react-lite';
+import { BleState } from '../../helper/States/BleState';
+import { LedCommInstance } from '../../helper/BLE/LedComm';
+import useTimeout from '@rooks/use-timeout';
 
 export interface BLEScanDialogProps {
-  ledComm: LedComm;
+  bleState: BleState;
   buttonText?: string;
   buttonMode?: 'text' | 'outlined' | 'contained';
   buttonStyle?: StyleProp<ViewStyle>;
@@ -14,19 +24,40 @@ export interface BLEScanDialogProps {
 }
 
 export const BLEScanDialog = (props: BLEScanDialogProps) => {
-  const [visible, setVisible] = useState(false);
-  const { ledComm } = props;
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const styles = StyleSheet.create({
+    container: {
+      flexGrow: 1,
+    },
+  });
 
-  const showModal = () => {
-    ledComm.startScan();
-    setVisible(true);
+  const ledComm = LedCommInstance;
+  const { bleState } = props;
+
+  const handleScanResult = (err: BleError | null, device: Device | null): void => {
+    if (err) {
+      console.error('Error when scanning', err);
+      return;
+    }
+
+    if (device) {
+      bleState.addScannedDevice(device);
+    }
   };
-  const hideModal = () => {
+
+  const scanTimeout = useTimeout(() => stopScan(), 5000);
+
+  const startDeviceScan = useCallback(() => {
+    setRefreshing(true);
+    ledComm.scanLEDDevices(handleScanResult);
+    scanTimeout.start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshing]);
+
+  const stopScan = () => {
     ledComm.stopScan();
-    setVisible(false);
+    setRefreshing(false);
   };
-
-  const containerStyle = props.dialogStyle || { backgroundColor: 'white', padding: 20 };
 
   const renderDeviceItem = (item: ListRenderItemInfo<Device>): React.ReactElement => {
     return (
@@ -40,21 +71,19 @@ export const BLEScanDialog = (props: BLEScanDialogProps) => {
   };
 
   return (
-    <Provider>
-      <Portal>
-        <Modal visible={visible} onDismiss={hideModal} contentContainerStyle={containerStyle}>
-          <FlatList
-            data={ledComm.scannedDevices}
-            renderItem={renderDeviceItem}
-            keyExtractor={(item: Device): string => {
-              return item.id;
-            }}
-          />
-        </Modal>
-      </Portal>
-      <Button style={props.buttonStyle} onPress={showModal} mode={props.buttonMode || 'contained'}>
-        {props.buttonText || 'Scan nearby devices'}
-      </Button>
-    </Provider>
+    <Observer>
+      {() => (
+        <FlatList
+          contentContainerStyle={styles.container}
+          refreshControl={
+            <RefreshControl enabled={true} refreshing={refreshing} onRefresh={startDeviceScan} />
+          }
+          data={bleState.scannedDevices.slice()}
+          renderItem={renderDeviceItem}
+          keyExtractor={(item: Device) => item.id}
+          ListHeaderComponent={<Text>{'Pull to refresh'}</Text>}
+        />
+      )}
+    </Observer>
   );
 };
