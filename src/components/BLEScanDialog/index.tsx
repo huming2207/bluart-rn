@@ -59,12 +59,17 @@ export const BLEScanDialog = (props: BLEScanDialogProps) => {
     setRefreshing(false);
   };
 
+  const handleDeviceItemPress = (device: Device) => {
+    console.log(device);
+  };
+
   const renderDeviceItem = (item: ListRenderItemInfo<Device>): React.ReactElement => {
     return (
       <>
         <List.Item
           title={item.item.name || item.item.localName || 'Unknown name'}
           description={item.item.id}
+          onPress={() => handleDeviceItemPress(item.item)}
         />
       </>
     );

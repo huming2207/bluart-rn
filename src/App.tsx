@@ -16,22 +16,16 @@ declare const global: { HermesInternal: null | {} };
 
 const App = () => {
   return (
-    <PaperProvider theme={LightPaperTheme}>
-      <NavigationContainer theme={LightNavTheme}>
+    <NavigationContainer theme={LightNavTheme}>
+      <PaperProvider theme={LightPaperTheme}>
         <Stack.Navigator
           initialRouteName={ScreenNames.BleConfigScreen}
           screenOptions={{ header: BluartNavBar }}>
-          <Stack.Screen
-            name={ScreenNames.LedControlScreen}
-            component={LedScreen}
-          />
-          <Stack.Screen
-            name={ScreenNames.BleConfigScreen}
-            component={BleScreen}
-          />
+          <Stack.Screen name={ScreenNames.LedControlScreen} component={LedScreen} />
+          <Stack.Screen name={ScreenNames.BleConfigScreen} component={BleScreen} />
         </Stack.Navigator>
-      </NavigationContainer>
-    </PaperProvider>
+      </PaperProvider>
+    </NavigationContainer>
   );
 };
 
