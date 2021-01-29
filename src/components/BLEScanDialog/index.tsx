@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { BleError, Device } from 'react-native-ble-plx';
 import { Observer } from 'mobx-react-lite';
-import { BleState } from '../../helper/States/BleState';
+import { BleState } from '../../helper/states/BleState';
 import { LedCommInstance } from '../../helper/BLE/LedComm';
 import useTimeout from '@rooks/use-timeout';
 
@@ -60,7 +60,13 @@ export const BLEScanDialog = (props: BLEScanDialogProps) => {
   };
 
   const handleDeviceItemPress = (device: Device) => {
-    console.log(device);
+    bleState.setSelectedDevice({
+      id: device.id,
+      name: device.name || device.localName || 'Unknown',
+      serviceUUIDs: device.serviceUUIDs || [],
+    });
+
+    console.log(JSON.stringify(device));
   };
 
   const renderDeviceItem = (item: ListRenderItemInfo<Device>): React.ReactElement => {
