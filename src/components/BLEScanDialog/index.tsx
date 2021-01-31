@@ -65,8 +65,6 @@ export const BLEScanDialog = (props: BLEScanDialogProps) => {
       name: device.name || device.localName || 'Unknown',
       serviceUUIDs: device.serviceUUIDs || [],
     });
-
-    console.log(JSON.stringify(device));
   };
 
   const renderDeviceItem = (item: ListRenderItemInfo<Device>): React.ReactElement => {
