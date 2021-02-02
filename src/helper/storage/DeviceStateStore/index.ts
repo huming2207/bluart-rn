@@ -8,18 +8,18 @@ export interface SavedDevice {
   name: string;
 }
 
-export const writeSelectedDevice = async (device: SavedDevice): Promise<void> => {
+export const writePreviousDevice = async (device: SavedDevice): Promise<void> => {
   try {
     const json = JSON.stringify(device);
-    await AsyncStorage.setItem(StorageKeys.SelectedDevice, json);
+    await AsyncStorage.setItem(StorageKeys.PreviousDevice, json);
   } catch (err) {
     Alert.alert('Error', 'Failed to save your selected device', undefined, { cancelable: false });
   }
 };
 
-export const readSelectedDevice = async (): Promise<SavedDevice | undefined> => {
+export const readPreviousDevice = async (): Promise<SavedDevice | undefined> => {
   try {
-    const json = await AsyncStorage.getItem(StorageKeys.SelectedDevice);
+    const json = await AsyncStorage.getItem(StorageKeys.PreviousDevice);
     if (!json) {
       return undefined;
     }

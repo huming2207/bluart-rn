@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { List } from 'react-native-paper';
+import React, { useCallback, useEffect, useState } from 'react';
+import { List, RadioButton } from 'react-native-paper';
 import {
   ListRenderItemInfo,
   RefreshControl,
@@ -8,6 +8,7 @@ import {
   Text,
   ViewStyle,
   FlatList,
+  View,
 } from 'react-native';
 import { BleError, Device } from 'react-native-ble-plx';
 import { Observer } from 'mobx-react-lite';
@@ -28,6 +29,9 @@ export const BLEScanDialog = (props: BLEScanDialogProps) => {
   const styles = StyleSheet.create({
     container: {
       flexGrow: 1,
+    },
+    radioButton: {
+      marginTop: 10,
     },
   });
 
@@ -54,28 +58,45 @@ export const BLEScanDialog = (props: BLEScanDialogProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshing]);
 
+  useEffect(() => {
+    startDeviceScan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const stopScan = () => {
     ledComm.stopScan();
     setRefreshing(false);
   };
 
   const handleDeviceItemPress = (device: Device) => {
-    bleState.setSelectedDevice({
-      id: device.id,
-      name: device.name || device.localName || 'Unknown',
-      serviceUUIDs: device.serviceUUIDs || [],
-    });
+    bleState.setCurrentDevice(device);
   };
 
   const renderDeviceItem = (item: ListRenderItemInfo<Device>): React.ReactElement => {
     return (
-      <>
-        <List.Item
-          title={item.item.name || item.item.localName || 'Unknown name'}
-          description={item.item.id}
-          onPress={() => handleDeviceItemPress(item.item)}
-        />
-      </>
+      <Observer>
+        {() => (
+          <>
+            <List.Item
+              title={item.item.name || item.item.localName || 'Unknown name'}
+              description={item.item.id}
+              onPress={() => handleDeviceItemPress(item.item)}
+              right={() => (
+                <View style={styles.radioButton}>
+                  <RadioButton
+                    value=""
+                    status={
+                      bleState.currentDevice && bleState.currentDevice.id === item.item.id
+                        ? 'checked'
+                        : 'unchecked'
+                    }
+                  />
+                </View>
+              )}
+            />
+          </>
+        )}
+      </Observer>
     );
   };
 

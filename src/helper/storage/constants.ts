@@ -1,3 +1,3 @@
 export enum StorageKeys {
-  SelectedDevice = '@bluart/selectedDevice',
+  PreviousDevice = '@bluart/prevDevice',
 }

@@ -23,7 +23,7 @@ export default function BluartNavBar(props: StackHeaderProps): JSX.Element {
             {previous ? <Appbar.BackAction onPress={navigation.goBack} /> : null}
             <Appbar.Content title="Bluart" />
             <IconButton
-              icon={bleState.selectedDevice ? 'bluetooth-audio' : 'bluetooth-off'}
+              icon={bleState.currentDevice ? 'bluetooth-audio' : 'bluetooth-off'}
               color="white"
             />
             <Menu

@@ -1,14 +1,15 @@
 import { makeAutoObservable } from 'mobx';
 import { Device } from 'react-native-ble-plx';
-import { readSelectedDevice, SavedDevice, writeSelectedDevice } from '../storage/DeviceStateStore';
+import { readPreviousDevice, SavedDevice, writePreviousDevice } from '../storage/DeviceStateStore';
 
 export class BleState {
   public connectedDevices: Device[] = [];
   public scannedDevices: Device[] = [];
-  public selectedDevice?: SavedDevice;
+  public previousDevice?: SavedDevice;
+  public currentDevice: Device | undefined = undefined;
 
   constructor() {
-    (async () => await this.loadSelectedDeviceStore())();
+    (async () => await this.loadPreviousDeviceStore())();
     makeAutoObservable(this);
   }
 
@@ -37,17 +38,17 @@ export class BleState {
     this.scannedDevices = this.scannedDevices.filter((item) => item.id !== device.id);
   }
 
-  public async setSelectedDevice(device: SavedDevice) {
-    await writeSelectedDevice(device);
-    this.selectedDevice = device;
+  public async setPreviousDevice(device: SavedDevice) {
+    await writePreviousDevice(device);
+    this.previousDevice = device;
   }
 
-  public getSelectedDevice(): SavedDevice | undefined {
-    return this.selectedDevice;
+  public async loadPreviousDeviceStore(): Promise<void> {
+    this.previousDevice = await readPreviousDevice();
   }
 
-  public async loadSelectedDeviceStore(): Promise<void> {
-    this.selectedDevice = await readSelectedDevice();
+  public setCurrentDevice(device: Device) {
+    this.currentDevice = device;
   }
 }
 
