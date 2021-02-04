@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer';
-import { ScanMode } from 'react-native-ble-plx';
+import { Alert } from 'react-native';
+import { BleError, Device, ScanMode } from 'react-native-ble-plx';
 import { BaseBleComm, BleCommDeviceCallback } from './BaseBleComm';
 import { BLEServiceUUID, LEDColorCharacteristicUUID } from './constants';
 
@@ -55,6 +56,10 @@ export class LedComm extends BaseBleComm {
   }
 
   public async writeColor(deviceMac: string, color: LedColor): Promise<LedColor> {
+    if (!(await this.isConnected(deviceMac))) {
+      await this.connect(deviceMac, this.handleDisconnectError);
+    }
+
     const rxBuf = await this.writeCharacteristic(
       deviceMac,
       BLEServiceUUID,
@@ -71,6 +76,10 @@ export class LedComm extends BaseBleComm {
   }
 
   public async readColor(deviceMac: string): Promise<LedColor> {
+    if (!(await this.isConnected(deviceMac))) {
+      await this.connect(deviceMac, this.handleDisconnectError);
+    }
+
     const rxBuf = await this.readCharacteristic(
       deviceMac,
       BLEServiceUUID,
@@ -83,6 +92,13 @@ export class LedComm extends BaseBleComm {
     }
 
     return rxColor;
+  }
+
+  public handleDisconnectError(err: BleError | null, device: Device | null): void {
+    Alert.alert(
+      `Error: ${device?.id || 'device' + ' disconnected unexpectly'}`,
+      err?.message || 'Unknown error',
+    );
   }
 }
 

@@ -65,6 +65,10 @@ export class BaseBleComm {
     return device;
   }
 
+  public async isConnected(deviceMac: string): Promise<boolean> {
+    return await this.ble.isDeviceConnected(deviceMac);
+  }
+
   public async disconnect(deviceMac: string): Promise<Device> {
     return await this.ble.cancelDeviceConnection(deviceMac);
   }
