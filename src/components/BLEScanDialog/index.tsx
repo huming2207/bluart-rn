@@ -68,8 +68,9 @@ export const BLEScanDialog = (props: BLEScanDialogProps) => {
     setRefreshing(false);
   };
 
-  const handleDeviceItemPress = (device: Device) => {
+  const handleDeviceItemPress = async (device: Device) => {
     bleState.setCurrentDevice(device);
+    await ledComm.connect(device.id, ledComm.handleDisconnectError);
   };
 
   const renderDeviceItem = (item: ListRenderItemInfo<Device>): React.ReactElement => {
