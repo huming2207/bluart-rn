@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer';
-import { PermissionsAndroid } from 'react-native';
+import { PermissionsAndroid, Platform } from 'react-native';
 import {
   BleManager,
   Device,
@@ -16,6 +16,10 @@ export class BaseBleComm {
   protected ble = new BleManager();
 
   public async requestPermission(): Promise<void> {
+    if (Platform.OS !== 'android') {
+      return;
+    }
+
     try {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -38,6 +42,10 @@ export class BaseBleComm {
   }
 
   public async checkPermission(): Promise<boolean> {
+    if (Platform.OS !== 'android') {
+      return true;
+    }
+
     return PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
   }
 
