@@ -1,7 +1,5 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import BluartNavBar from './components/BluartNavBar';
 
 import { Provider as PaperProvider } from 'react-native-paper';
 import LedScreen from './screen/LedScreen';
@@ -9,8 +7,10 @@ import { LightPaperTheme } from './theme/PaperTheme';
 import { LightNavTheme } from './theme/NavigationTheme';
 import { ScreenNames } from './screen/common/ScreenNames';
 import BleScreen from './screen/BleScreen';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import BluartAppBar from './components/BluartAppBar';
 
-const Stack = createStackNavigator();
+const Tab = createMaterialTopTabNavigator();
 
 declare const global: { HermesInternal: null | {} };
 
@@ -18,12 +18,11 @@ const App = () => {
   return (
     <NavigationContainer theme={LightNavTheme}>
       <PaperProvider theme={LightPaperTheme}>
-        <Stack.Navigator
-          initialRouteName={ScreenNames.BleConfigScreen}
-          screenOptions={{ header: BluartNavBar }}>
-          <Stack.Screen name={ScreenNames.LedControlScreen} component={LedScreen} />
-          <Stack.Screen name={ScreenNames.BleConfigScreen} component={BleScreen} />
-        </Stack.Navigator>
+        <BluartAppBar />
+        <Tab.Navigator initialRouteName={ScreenNames.BleConfigScreen}>
+          <Tab.Screen name={'LED Control'} component={LedScreen} />
+          <Tab.Screen name={'BLE Devices'} component={BleScreen} />
+        </Tab.Navigator>
       </PaperProvider>
     </NavigationContainer>
   );
