@@ -1,4 +1,5 @@
 import Slider from '@react-native-community/slider';
+import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { TriangleColorPicker } from 'react-native-color-picker';
@@ -7,10 +8,12 @@ import { Button, Divider, Text } from 'react-native-paper';
 import tinycolor from 'tinycolor2';
 import { LedCommInstance } from '../../helper/BLE/LedComm';
 import { BleStateInstance } from '../../helper/states/BleState';
+import { ScreenNames } from '../common/ScreenNames';
 
 export default function LedScreen(): JSX.Element {
   const [color, setColor] = useState<HsvColor>({ h: 0, s: 0, v: 0 });
   const [white, setWhite] = useState<number>(0);
+  const nav = useNavigation();
 
   const handleWhiteSlider = (value: number) => {
     const rounded = Math.round(value);
@@ -35,6 +38,10 @@ export default function LedScreen(): JSX.Element {
     console.log('Current color', currColor, rgb);
 
     LedCommInstance.writeColor(deviceId, { red: rgb.r, green: rgb.g, blue: rgb.b, white });
+  };
+
+  const handleNavToBleConfig = () => {
+    nav.navigate(ScreenNames.BleConfigScreen);
   };
 
   const style = StyleSheet.create({
@@ -83,8 +90,11 @@ export default function LedScreen(): JSX.Element {
         />
       </View>
       <Divider />
-      <Button mode="contained" style={style.button} onPress={handleCommitColor}>
-        Set color
+      <Button
+        mode="contained"
+        style={style.button}
+        onPress={BleStateInstance.currentDevice ? handleCommitColor : handleNavToBleConfig}>
+        {BleStateInstance.currentDevice ? 'Set color' : 'Select device'}
       </Button>
     </>
   );

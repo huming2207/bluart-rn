@@ -9,6 +9,7 @@ import { ScreenNames } from './screen/common/ScreenNames';
 import BleScreen from './screen/BleScreen';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import BluartAppBar from './components/BluartAppBar';
+import UartScreen from './screen/UartScreen';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -19,9 +20,10 @@ const App = () => {
     <NavigationContainer theme={LightNavTheme}>
       <PaperProvider theme={LightPaperTheme}>
         <BluartAppBar />
-        <Tab.Navigator initialRouteName={ScreenNames.BleConfigScreen}>
-          <Tab.Screen name={'LED Control'} component={LedScreen} />
-          <Tab.Screen name={'BLE Devices'} component={BleScreen} />
+        <Tab.Navigator initialRouteName={ScreenNames.LedControlScreen}>
+          <Tab.Screen name={ScreenNames.LedControlScreen} component={LedScreen} />
+          <Tab.Screen name={ScreenNames.UartScreen} component={UartScreen} />
+          <Tab.Screen name={ScreenNames.BleConfigScreen} component={BleScreen} />
         </Tab.Navigator>
       </PaperProvider>
     </NavigationContainer>

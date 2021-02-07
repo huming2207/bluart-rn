@@ -1,4 +1,5 @@
 export enum ScreenNames {
-  BleConfigScreen = 'BLE',
-  LedControlScreen = 'LED',
+  BleConfigScreen = 'BLE Config',
+  LedControlScreen = 'LED Control',
+  UartScreen = 'UART Console',
 }
